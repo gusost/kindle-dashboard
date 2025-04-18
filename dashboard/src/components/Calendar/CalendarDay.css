@@ -1,0 +1,15 @@
+.calendar-day {
+  margin-bottom: 24px;
+}
+
+.calendar-day__title {
+  font-size: 32px;
+  margin: 0 0 16px 0;
+  font-weight: normal;
+}
+
+.calendar-day__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+} 

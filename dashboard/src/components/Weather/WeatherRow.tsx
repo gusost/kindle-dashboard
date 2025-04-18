@@ -7,7 +7,7 @@ const formatTime = (timestamp: number): string => {
   return date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
 }
 
-const WeatherRow: React.FC = () => {
+export const WeatherRow: React.FC = () => {
   const temp = Math.round(weatherData.main.temp)
   const condition = weatherData.weather[0].description
     .split(' ')
@@ -37,5 +37,3 @@ const WeatherRow: React.FC = () => {
     </div>
   )
 }
-
-export default WeatherRow

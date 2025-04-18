@@ -1,6 +1,7 @@
 import React from 'react'
-import './CalendarEvents.css'
+import './CalendarBlock.css'
 import calendarData from '../../data/calendar.json'
+import { CalendarDay } from './CalendarDay'
 
 interface CalendarEvent {
   time: string
@@ -51,24 +52,10 @@ const groupedEvents: DayEvents[] = Object.values(groupedEventsMap).sort(
   (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
 )
 
-const CalendarEvents: React.FC = () => (
-  <div className="calendar-events">
-    {groupedEvents.map((day, dayIdx) => (
-      <div key={dayIdx} className="calendar-events__day">
-        <h2 className="calendar-events__title">
-          {day.weekday}, {day.date}
-        </h2>
-        <ul className="calendar-events__list">
-          {day.events.map((event, idx) => (
-            <li key={idx} className="calendar-events__item">
-              <span className="calendar-events__time">{event.time}</span>
-              <span className="calendar-events__title-text">{event.title}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+export const CalendarBlock: React.FC = () => (
+  <div className="calendar-block">
+    {groupedEvents.map((day, idx) => (
+      <CalendarDay key={idx} weekday={day.weekday} date={day.date} events={day.events} />
     ))}
   </div>
-)
-
-export default CalendarEvents
+) 
