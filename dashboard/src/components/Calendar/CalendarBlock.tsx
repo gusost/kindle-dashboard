@@ -25,7 +25,7 @@ const formatTime = (event: any): string => {
     const date = new Date(event.start.dateTime)
     return date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
   }
-  return 'Dag' // All-day event
+  return '' // All-day event
 }
 
 const formatDate = (date: Date): { date: string; weekday: string } => {

@@ -1,16 +1,28 @@
 .calendar-event {
   display: flex;
   align-items: baseline;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   font-size: 24px;
 }
 
+.calendar-event:last-child {
+  border-bottom: 1px solid #ccc;
+  margin-bottom: -2px;
+  padding-bottom: 10px;
+}
+
 .calendar-event__time {
-  min-width: 80px;
+  min-width: 70px;
   margin-right: 16px;
   font-weight: bold;
+  color: #333;
+  flex-shrink: 0;
 }
 
 .calendar-event__title {
   flex: 1;
+  color: #000;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.2;
 } 

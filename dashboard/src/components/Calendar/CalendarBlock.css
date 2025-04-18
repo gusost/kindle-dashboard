@@ -1,3 +1,11 @@
 .calendar-block {
-  padding: 24px;
+  padding: 12px;
+  background: #fff;
+  color: #000;
+  font-size: 24px;
+  flex: 1;
+  overflow-y: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 24px;
 } 

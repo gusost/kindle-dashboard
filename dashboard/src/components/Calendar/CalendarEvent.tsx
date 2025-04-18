@@ -8,7 +8,7 @@ interface CalendarEventProps {
 
 export const CalendarEvent: React.FC<CalendarEventProps> = ({ time, title }) => (
   <li className="calendar-event">
-    <span className="calendar-event__time">{time}</span>
+    {time && <span className="calendar-event__time">{time}</span>}
     <span className="calendar-event__title">{title}</span>
   </li>
-) 
+)
