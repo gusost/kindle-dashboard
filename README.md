@@ -5,7 +5,7 @@ A dashboard application designed to display weather and calendar information on 
 ## Features
 
 - Current weather display with temperature and conditions
-- 8-hour weather forecast
+- 24-hour weather forecast
 - Calendar events display
 - Timestamp display
 - Optimized for Kindle e-ink display
