@@ -1,6 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 const { google } = require('googleapis')
+const axios = require('axios')
+const ical = require('node-ical')
 
 const CREDENTIALS_PATH = path.join(__dirname, 'client_secret_783324530652-psgiulir4cdlp0i2gqsinq492d2e2u1p.apps.googleusercontent.com.json')
 const TOKEN_PATH = path.join(__dirname, 'token.json')
@@ -38,25 +40,71 @@ async function authorize() {
   })
 }
 
-// Fetch events
+// Get all calendars
+async function getAllCalendars(auth) {
+  const calendar = google.calendar({ version: 'v3', auth })
+  const calendarList = await calendar.calendarList.list()
+  return calendarList.data.items
+}
+
+// Fetch and parse VCALENDAR
+async function getOnCallEvents() {
+  const response = await axios.get('https://rootly.com/account/shifts/ical/eyJfcmFpbHMiOnsiZGF0YSI6NTg2NywicHVyIjoibWVtYmVyc2hpcC9pY2FsIn19--cea7a5a4dd3a2b1da590b67ed1daf76fe3443846dcc3f746b5106c053f72d12d?user_ids=5785')
+  const events = await ical.parseICS(response.data)
+  
+  return Object.values(events)
+    .filter(event => event.type === 'VEVENT')
+    .map(event => ({
+      summary: 'On-Call',
+      start: {
+        dateTime: event.start.toISOString()
+      },
+      end: {
+        dateTime: event.end.toISOString()
+      },
+      calendarName: 'On-Call Schedule'
+    }))
+}
+
+// Fetch events from all calendars
 async function listEvents(auth) {
   const calendar = google.calendar({ version: 'v3', auth })
-  const res = await calendar.events.list({
-    calendarId: 'primary',
-    timeMin: new Date().toISOString(),
-    maxResults: 50,
-    singleEvents: true,
-    orderBy: 'startTime'
+  const calendars = await getAllCalendars(auth)
+  
+  const allEvents = []
+  for (const cal of calendars) {
+    const res = await calendar.events.list({
+      calendarId: cal.id,
+      timeMin: new Date().toISOString(),
+      maxResults: 50,
+      singleEvents: true,
+      orderBy: 'startTime'
+    })
+    
+    const events = res.data.items || []
+    events.forEach(event => {
+      event.calendarName = cal.summary
+    })
+    
+    allEvents.push(...events)
+  }
+  
+  // Add on-call events
+  const onCallEvents = await getOnCallEvents()
+  allEvents.push(...onCallEvents)
+  
+  return allEvents.sort((a, b) => {
+    const aTime = a.start.dateTime || a.start.date
+    const bTime = b.start.dateTime || b.start.date
+    return new Date(aTime) - new Date(bTime)
   })
-  console.log(calendar.events)
-  return  res.data.items || []
 }
 
 // Main
 async function fetchCalendarEvents() {
   const auth = await authorize()
   const events = await listEvents(auth)
-  fs.writeFileSync(path.join(__dirname, 'calendar.json'), JSON.stringify(events, null, 2))
+  fs.writeFileSync(path.join(__dirname, 'dashboard/src/data/calendar.json'), JSON.stringify(events, null, 2))
   console.log(`Saved ${events.length} events to calendar.json`)
 }
 
