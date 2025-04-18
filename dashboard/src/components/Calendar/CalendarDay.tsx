@@ -1,14 +1,12 @@
 import React from 'react'
 import './CalendarDay.css'
 import { CalendarEvent } from './CalendarEvent'
+import { CalendarEvent as CalendarEventType } from './types'
 
 interface CalendarDayProps {
   weekday: string
   date: string
-  events: Array<{
-    time: string
-    title: string
-  }>
+  events: CalendarEventType[]
 }
 
 export const CalendarDay: React.FC<CalendarDayProps> = ({ weekday, date, events }) => (
@@ -18,8 +16,8 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({ weekday, date, events 
     </h2>
     <ul className="calendar-day__list">
       {events.map((event, idx) => (
-        <CalendarEvent key={idx} time={event.time} title={event.title} />
+        <CalendarEvent key={idx} event={event} />
       ))}
     </ul>
   </div>
-) 
+)

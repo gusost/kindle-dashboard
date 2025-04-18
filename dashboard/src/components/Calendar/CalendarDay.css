@@ -6,6 +6,9 @@
   flex-direction: column;
   min-width: 0;
   flex: 1;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: -2px;
+  padding-bottom: 8px;
 }
 
 .calendar-day__title {
@@ -25,4 +28,4 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-} 
+}
