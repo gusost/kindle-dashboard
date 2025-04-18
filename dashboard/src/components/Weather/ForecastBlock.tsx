@@ -1,10 +1,10 @@
-import React from 'react';
-import './ForecastBlock.css';
+import React from 'react'
+import './ForecastBlock.css'
 
 interface ForecastBlockProps {
-  time: string;
-  icon: string;
-  temp: number;
+  time: string
+  icon: string
+  temp: number
 }
 
 export const ForecastBlock: React.FC<ForecastBlockProps> = ({ time, icon, temp }) => {
@@ -16,5 +16,5 @@ export const ForecastBlock: React.FC<ForecastBlockProps> = ({ time, icon, temp }
       </div>
       <div className="forecast-block__temp">{Math.round(temp)}°C</div>
     </div>
-  );
-}; 
+  )
+}

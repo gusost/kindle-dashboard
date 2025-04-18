@@ -1,6 +1,4 @@
-import React from 'react';
-import './Timestamp.css';
+import React from 'react'
+import './Timestamp.css'
 
-export const Timestamp: React.FC = () => (
-  <div className="timestamp">{new Date().toLocaleTimeString('sv-SE')}</div>
-)
+export const Timestamp: React.FC = () => <div className="timestamp">{new Date().toLocaleTimeString('sv-SE')}</div>

@@ -1,21 +1,21 @@
-import React from 'react';
-import './WeatherRow.css';
+import React from 'react'
+import './WeatherRow.css'
 import weatherData from '../../data/nacka-current.json'
 
 const formatTime = (timestamp: number): string => {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-};
+  const date = new Date(timestamp * 1000)
+  return date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+}
 
 const WeatherRow: React.FC = () => {
-  const temp = Math.round(weatherData.main.temp);
+  const temp = Math.round(weatherData.main.temp)
   const condition = weatherData.weather[0].description
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-  const iconCode = weatherData.weather[0].icon;
-  const sunrise = formatTime(weatherData.sys.sunrise);
-  const sunset = formatTime(weatherData.sys.sunset);
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+  const iconCode = weatherData.weather[0].icon
+  const sunrise = formatTime(weatherData.sys.sunrise)
+  const sunset = formatTime(weatherData.sys.sunset)
 
   return (
     <div className="weather-row">
@@ -35,7 +35,7 @@ const WeatherRow: React.FC = () => {
         <img src="/sun-icons/sunset.svg" alt="Sunset" className="weather-row__sun-icon" />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default WeatherRow; 
+export default WeatherRow
