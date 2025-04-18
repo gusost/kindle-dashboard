@@ -1,74 +1,45 @@
 const puppeteer = require('puppeteer-core')
 const axios = require('axios')
 
-async function run() {
+async function render() {
   console.log('Fetching WebSocket endpoint...')
   const { data } = await axios.get('http://127.0.0.1:9222/json/version')
   const browserWSEndpoint = data.webSocketDebuggerUrl
 
   console.log('Connecting to Chromium...')
-  const browser = await puppeteer.connect({ browserWSEndpoint })
+  const browser = await puppeteer.connect({ 
+    browserWSEndpoint,
+    defaultViewport: {
+      width: 758,
+      height: 1024
+    }
+  })
   console.log('Connected')
 
-  const pages = await browser.pages()
-  const page = pages[0]
+  const page = await browser.newPage()
+  page.on('console', msg => console.log(`[Browser Console] ${msg.text()}`))
+  page.on('pageerror', err => console.error(`[Page Error] ${err}`))
 
-  console.log('Rendering...')
-  await page.setContent('<html><body><h1>Hello</h1></body></html>')
-  await page.screenshot({ path: require('os').homedir() + '/hello2.png' })
+  console.log('Loading page...')
+  await page.goto('http://localhost:4000/index.html', {
+    waitUntil: 'networkidle0'
+  })
+
+  // Wait for weather-ready event inside the page
+  //await page.waitForSelector('.weather-icon', { visible: true })
+
+  console.log('Taking screenshot...')
+  await page.screenshot({
+    path: require('os').homedir() + '/schedule-gray.png',
+    type: 'png',
+    fullPage: false
+  })
 
   console.log('✅ Done')
   await browser.disconnect()
 }
 
-run().catch(err => {
-  console.error('❌ Failed:', err)
-  process.exit(1)
-})
-
-/* const os = require('os')
-const path = require('path')
-const puppeteer = require('puppeteer-core')
-
-const tmpBase = `${os.homedir()}/tmp-chrome`
-
-async function render() {
-  const browser = await puppeteer.launch({
-    executablePath: '/usr/bin/chromium-browser', // or '/usr/bin/chromium'
-    headless: 'old',
-    dumpio: true,
-    args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-gpu'
-    ]
-  })
-  console.log('Opening new page...')
-  //const page = await browser.newPage()
-  console.log('Getting default pages...')
-  const pages = await browser.pages()
-  const page = pages[0]
-
-  console.log('Setting viewport...')
-  await page.setViewport({ width: 758, height: 1024 })
-
-  //const filePath = `file://${__dirname}/index.html`
-  await page.goto('https://example.com', { waitUntil: 'networkidle0' })
-  console.log(`Navigating to ${filePath}...`)
-  await page.goto(filePath, { waitUntil: 'networkidle0' })
-
-  //const outPath = path.join(__dirname, 'schedule-gray.png')
-  const outPath = path.join(os.homedir(), 'schedule-gray.png')
-  console.log(`Saving screenshot to ${outPath}...`)
-  await page.screenshot({ path: outPath })
-
-  console.log('Closing browser...')
-  await browser.close()
-
-  console.log('✅ Done')
-}
-
 render().catch(err => {
   console.error('❌ Render failed:', err)
   process.exit(1)
-}) */
+})
