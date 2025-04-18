@@ -1,0 +1,10 @@
+.App {
+  height: 1024px;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #0f0f0f;
+}

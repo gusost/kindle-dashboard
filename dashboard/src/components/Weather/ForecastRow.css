@@ -1,0 +1,13 @@
+.forecast-row {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #bbb;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.forecast-row::-webkit-scrollbar {
+  display: none;
+} 

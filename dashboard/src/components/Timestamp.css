@@ -1,0 +1,9 @@
+.timestamp {
+  position: fixed;
+  top: 8px;
+  left: 350px;
+  font-size: 12px;
+  color: #222;
+  font-family: monospace;
+  z-index: 1000;
+} 

@@ -1,0 +1,62 @@
+.weather-row {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #bbb;
+  font-size: 32px;
+}
+
+.weather-row__group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: -10px;
+  margin-top: -10px;
+}
+
+.weather-row__icon {
+  margin-right: 0px;
+  display: flex;
+  align-items: center;
+}
+
+.weather-row__icon-img {
+  width: 100px;
+  height: 100px;
+  filter: grayscale(1) contrast(0.5);
+}
+
+.weather-row__condition {
+  margin-right: 0px;
+}
+
+.weather-row__temperature {
+  font-weight: bold;
+  margin-right: 0px;
+}
+
+.weather-row__sun-times {
+  display: flex;
+  font-size: 36px;
+  font-weight: bold;
+}
+.weather-row__sun-times-up {
+  margin-left: 16px;
+}
+.weather-row__sun-times-down {
+  margin-right: 16px;
+}
+
+.weather-row__sun-icon {
+  width: 40px;
+  height: 40px;
+  vertical-align: middle;
+}
+.weather-row__sun-times-down .weather-row__sun-icon {
+  margin-left: 8px;
+}
+.weather-row__sun-times-up .weather-row__sun-icon {
+  margin-right: 8px;
+}
