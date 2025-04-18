@@ -1,4 +1,3 @@
-import React from 'react'
 import './App.css'
 import { CalendarBlock } from './components/Calendar/CalendarBlock'
 import { WeatherRow } from './components/Weather/WeatherRow'
