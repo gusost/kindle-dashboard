@@ -1,15 +1,26 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import './CalendarBlock.css'
-import calendarData from '../../data/calendar.json'
 import { CalendarDay } from './CalendarDay'
 import { processCalendarEvents } from './helpers'
+import { DayEvents } from './types'
 
-const groupedEvents = processCalendarEvents(calendarData)
+export const CalendarBlock: React.FC = () => {
+  const [groupedEvents, setGroupedEvents] = useState<DayEvents[]>([])
 
-export const CalendarBlock: React.FC = () => (
-  <div className="calendar-block">
-    {groupedEvents.map((day, idx) => (
-      <CalendarDay key={idx} weekday={day.weekday} date={day.date} events={day.events} />
-    ))}
-  </div>
-)
+  useEffect(() => {
+    fetch('/data/calendar.json')
+      .then((response) => response.json())
+      .then((data) => setGroupedEvents(processCalendarEvents(data)))
+      .catch((error) => console.error('Error fetching calendar data:', error))
+  }, [])
+
+  if (groupedEvents.length === 0) return <div>Loading...</div>
+
+  return (
+    <div className="calendar-block">
+      {groupedEvents.map((day, idx) => (
+        <CalendarDay key={idx} weekday={day.weekday} date={day.date} events={day.events} />
+      ))}
+    </div>
+  )
+}

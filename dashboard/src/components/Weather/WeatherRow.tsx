@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import './WeatherRow.css'
-import weatherData from '../../data/nacka-current.json'
+import { WeatherData } from './types'
 
 const formatTime = (timestamp: number): string => {
   const date = new Date(timestamp * 1000)
@@ -8,10 +8,21 @@ const formatTime = (timestamp: number): string => {
 }
 
 export const WeatherRow: React.FC = () => {
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
+
+  useEffect(() => {
+    fetch('/data/nacka-current.json')
+      .then((response) => response.json())
+      .then((data) => setWeatherData(data))
+      .catch((error) => console.error('Error fetching weather data:', error))
+  }, [])
+
+  if (!weatherData) return <div>Loading...</div>
+
   const temp = Math.round(weatherData.main.temp)
   const condition = weatherData.weather[0].description
     .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
   const iconCode = weatherData.weather[0].icon
   const sunrise = formatTime(weatherData.sys.sunrise)
