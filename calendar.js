@@ -154,6 +154,7 @@ async function fetchCalendarEvents() {
     const auth = await authorize()
     const events = await listEvents(auth)
     fs.writeFileSync(path.join(__dirname, 'dashboard/public/data/calendar.json'), JSON.stringify(events, null, 2))
+    fs.writeFileSync(path.join(__dirname, 'dashboard/build/data/calendar.json'), JSON.stringify(events, null, 2))
     console.log(`Saved ${events.length} events to calendar.json`)
   } catch (error) {
     console.error('Error fetching calendar events:', error.message)
