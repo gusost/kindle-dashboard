@@ -14,10 +14,37 @@ async function authorize() {
   const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0])
 
   if (fs.existsSync(TOKEN_PATH)) {
-    oAuth2Client.setCredentials(JSON.parse(fs.readFileSync(TOKEN_PATH)))
-    return oAuth2Client
+    try {
+      const token = JSON.parse(fs.readFileSync(TOKEN_PATH))
+      oAuth2Client.setCredentials(token)
+      
+      // Check if token is expired
+      if (token.expiry_date && token.expiry_date < Date.now()) {
+        console.log('Token expired, refreshing...')
+        try {
+          const { credentials } = await oAuth2Client.refreshAccessToken()
+          oAuth2Client.setCredentials(credentials)
+          fs.writeFileSync(TOKEN_PATH, JSON.stringify(credentials))
+          console.log('Token refreshed successfully')
+        } catch (refreshError) {
+          console.error('Error refreshing token:', refreshError.message)
+          console.log('Requesting new token...')
+          return requestNewToken(oAuth2Client)
+        }
+      }
+      
+      return oAuth2Client
+    } catch (error) {
+      console.error('Error loading token:', error.message)
+      return requestNewToken(oAuth2Client)
+    }
+  } else {
+    return requestNewToken(oAuth2Client)
   }
+}
 
+// Request a new token
+function requestNewToken(oAuth2Client) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: ['https://www.googleapis.com/auth/calendar.readonly']
@@ -31,7 +58,10 @@ async function authorize() {
     readline.question('\nPaste the code from the page: ', code => {
       readline.close()
       oAuth2Client.getToken(code, (err, token) => {
-        if (err) throw err
+        if (err) {
+          console.error('Error getting token:', err.message)
+          throw err
+        }
         fs.writeFileSync(TOKEN_PATH, JSON.stringify(token))
         oAuth2Client.setCredentials(token)
         resolve(oAuth2Client)
@@ -42,9 +72,18 @@ async function authorize() {
 
 // Get all calendars
 async function getAllCalendars(auth) {
-  const calendar = google.calendar({ version: 'v3', auth })
-  const calendarList = await calendar.calendarList.list()
-  return calendarList.data.items
+  try {
+    const calendar = google.calendar({ version: 'v3', auth })
+    const calendarList = await calendar.calendarList.list()
+    return calendarList.data.items
+  } catch (error) {
+    if (error.message.includes('invalid_grant')) {
+      console.error('Token expired or invalid, requesting new token...')
+      const newAuth = await authorize()
+      return getAllCalendars(newAuth)
+    }
+    throw error
+  }
 }
 
 // Fetch and parse VCALENDAR
@@ -68,44 +107,58 @@ async function getOnCallEvents() {
 
 // Fetch events from all calendars
 async function listEvents(auth) {
-  const calendar = google.calendar({ version: 'v3', auth })
-  const calendars = await getAllCalendars(auth)
-  
-  const allEvents = []
-  for (const cal of calendars) {
-    const res = await calendar.events.list({
-      calendarId: cal.id,
-      timeMin: new Date().toISOString(),
-      maxResults: 50,
-      singleEvents: true,
-      orderBy: 'startTime'
-    })
+  try {
+    const calendar = google.calendar({ version: 'v3', auth })
+    const calendars = await getAllCalendars(auth)
     
-    const events = res.data.items || []
-    events.forEach(event => {
-      event.calendarName = cal.summary
-    })
+    const allEvents = []
+    for (const cal of calendars) {
+      const res = await calendar.events.list({
+        calendarId: cal.id,
+        timeMin: new Date().toISOString(),
+        maxResults: 50,
+        singleEvents: true,
+        orderBy: 'startTime'
+      })
+      
+      const events = res.data.items || []
+      events.forEach(event => {
+        event.calendarName = cal.summary
+      })
+      
+      allEvents.push(...events)
+    }
     
-    allEvents.push(...events)
+    // Add on-call events
+    const onCallEvents = await getOnCallEvents()
+    allEvents.push(...onCallEvents)
+    
+    return allEvents.sort((a, b) => {
+      const aTime = a.start.dateTime || a.start.date
+      const bTime = b.start.dateTime || b.start.date
+      return new Date(aTime) - new Date(bTime)
+    })
+  } catch (error) {
+    if (error.message.includes('invalid_grant')) {
+      console.error('Token expired or invalid, requesting new token...')
+      const newAuth = await authorize()
+      return listEvents(newAuth)
+    }
+    throw error
   }
-  
-  // Add on-call events
-  const onCallEvents = await getOnCallEvents()
-  allEvents.push(...onCallEvents)
-  
-  return allEvents.sort((a, b) => {
-    const aTime = a.start.dateTime || a.start.date
-    const bTime = b.start.dateTime || b.start.date
-    return new Date(aTime) - new Date(bTime)
-  })
 }
 
 // Main
 async function fetchCalendarEvents() {
-  const auth = await authorize()
-  const events = await listEvents(auth)
-  fs.writeFileSync(path.join(__dirname, 'dashboard/src/data/calendar.json'), JSON.stringify(events, null, 2))
-  console.log(`Saved ${events.length} events to calendar.json`)
+  try {
+    const auth = await authorize()
+    const events = await listEvents(auth)
+    fs.writeFileSync(path.join(__dirname, 'dashboard/public/data/calendar.json'), JSON.stringify(events, null, 2))
+    console.log(`Saved ${events.length} events to calendar.json`)
+  } catch (error) {
+    console.error('Error fetching calendar events:', error.message)
+    process.exit(1)
+  }
 }
 
 fetchCalendarEvents()

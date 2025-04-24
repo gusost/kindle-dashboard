@@ -132,14 +132,43 @@ export const processCalendarEvents = (rawEvents: any[]): DayEvents[] => {
   events.forEach((event) => {
     if (!(event.start.dateTime || event.start.date) || !event.summary) return
 
-    const eventDate = getEventDate(event)
-    const { date, weekday } = formatDate(eventDate)
+    const startDate = getEventDate(event)
+    const endDate = event.end.dateTime ? new Date(event.end.dateTime) : new Date(event.end.date || '')
 
-    if (!groupedEventsMap[date]) {
-      groupedEventsMap[date] = { date, weekday, events: [] }
+    // Create a date for each day in the event's duration
+    let currentDate = new Date(startDate)
+    while (currentDate < endDate) {
+      const { date, weekday } = formatDate(currentDate)
+
+      if (!groupedEventsMap[date]) {
+        groupedEventsMap[date] = { date, weekday, events: [] }
+      }
+
+      // For multi-day events, create a full-day event for each day
+      const isMultiDay = startDate.toDateString() !== endDate.toDateString()
+      const dateStr = currentDate.toISOString().split('T')[0]
+
+      if (isMultiDay) {
+        // Create a full-day event for each day
+        groupedEventsMap[date].events.push({
+          ...event,
+          start: {
+            date: dateStr,
+            timeZone: event.start.timeZone
+          },
+          end: {
+            date: dateStr,
+            timeZone: event.end.timeZone
+          }
+        })
+      } else {
+        // For single-day events, keep as is
+        groupedEventsMap[date].events.push(event)
+      }
+
+      // Move to next day
+      currentDate = new Date(currentDate.getTime() + 86400000)
     }
-
-    groupedEventsMap[date].events.push(event)
   })
 
   return Object.values(groupedEventsMap).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())

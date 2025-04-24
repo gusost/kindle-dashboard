@@ -18,8 +18,10 @@ async function render() {
     waitUntil: 'networkidle0'
   })
 
-  // Wait for weather-ready event inside the page
-  //await page.waitForSelector('.weather-icon', { visible: true })
+  // Wait for weather and calendar to be rendered
+  await page.waitForSelector('.weather-row', { visible: true })
+  await page.waitForSelector('.forecast-row', { visible: true })
+  await page.waitForSelector('.calendar-block', { visible: true })
 
   await page.screenshot({
     path: 'schedule-gray.png',
