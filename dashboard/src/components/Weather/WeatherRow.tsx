@@ -20,10 +20,9 @@ export const WeatherRow: React.FC = () => {
   if (!weatherData) return <div>Loading...</div>
 
   const temp = Math.round(weatherData.main.temp)
-  const condition = weatherData.weather[0].description
-    .split(' ')
-    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  let condition = weatherData.weather[0].description
+  // Capitalize the first letter of the condition
+  condition = condition.charAt(0).toUpperCase().concat(condition.slice(1))
   const iconCode = weatherData.weather[0].icon
   const sunrise = formatTime(weatherData.sys.sunrise)
   const sunset = formatTime(weatherData.sys.sunset)
@@ -38,7 +37,9 @@ export const WeatherRow: React.FC = () => {
         <div className="weather-row__icon">
           <img src={`/weather-icons/${iconCode}.png`} alt={condition} className="weather-row__icon-img" />
         </div>
-        <div className="weather-row__condition">{condition}</div>
+        <div className="weather-row__condition" data-long={condition.length > 17}>
+          <span>{condition}</span>
+        </div>
         <div className="weather-row__temperature">{temp}°C</div>
       </div>
       <div className="weather-row__sun-times weather-row__sun-times-down">

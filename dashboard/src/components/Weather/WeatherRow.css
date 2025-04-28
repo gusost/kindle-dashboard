@@ -1,10 +1,10 @@
 .weather-row {
   display: flex;
-  flex-shrink: 0;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #bbb;
-  font-size: 32px;
+  font-size: 32px;          /* base size that looks good on e-ink */
+  column-gap: 12px;         /* spacing between grid cells        */
 }
 
 .weather-row__group {
@@ -17,7 +17,8 @@
 }
 
 .weather-row__icon {
-  margin-right: 0px;
+  margin-left: -12px;
+  margin-right: -12px;
   display: flex;
   align-items: center;
 }
@@ -30,6 +31,12 @@
 
 .weather-row__condition {
   margin-right: 0px;
+  /* let the column shrink if it has to, but don’t grow to fill */
+  flex: 1 1 min-content;
+}
+
+.weather-row__condition[data-long='true'] {
+  font-size: 28px;
 }
 
 .weather-row__temperature {
@@ -42,9 +49,11 @@
   font-size: 36px;
   font-weight: bold;
 }
+
 .weather-row__sun-times-up {
   margin-left: 16px;
 }
+
 .weather-row__sun-times-down {
   margin-right: 16px;
 }
@@ -54,9 +63,11 @@
   height: 40px;
   vertical-align: middle;
 }
+
 .weather-row__sun-times-down .weather-row__sun-icon {
   margin-left: 8px;
 }
+
 .weather-row__sun-times-up .weather-row__sun-icon {
   margin-right: 8px;
 }
