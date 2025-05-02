@@ -14,7 +14,7 @@ mkdir -p dashboard/public/data
 
 # Get weather and calendar events in parallel
 echo "📅 Fetching calendar events..."
-node calendar.js &
+/usr/local/bin/node calendar.js &
 CALENDAR_PID=$!
 echo "🌤️  Fetching weather..."
 ./get-weather.sh &
@@ -76,9 +76,9 @@ wait $WEATHER_PID
 echo "🌐 Starting web server..."
 if ! curl -s http://localhost:4000 > /dev/null; then
   cd dashboard/build
-  npx serve -l 4000 &
+  /usr/local/bin/npx serve -l 4000 &
   WEB_SERVER_PID=$!
-  
+
   # Wait for server to be ready
   MAX_RETRIES=10
   RETRY_COUNT=0
@@ -95,7 +95,7 @@ fi
 
 # Render the dashboard
 echo "🖼️  Rendering dashboard..."
-node render-pi.js
+/usr/local/bin/node render-pi.js
 
 # Convert to grayscale
 echo "🎨 Converting to grayscale..."

@@ -55,6 +55,9 @@ async function render() {
       fullPage: false
     })
 
+    console.log('Closing page...')
+    await page.close()
+
     console.log('✅ Done')
     await browser.disconnect()
   } catch (error) {

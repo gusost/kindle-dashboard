@@ -13,6 +13,14 @@ async function authorize() {
   const { client_secret, client_id, redirect_uris } = credentials.web
   const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0])
 
+  // Auto-save tokens on initial grant or refresh
+  oAuth2Client.on('tokens', _tokens => {
+    console.log('Tokens updated! Tokens:', _tokens)
+    // tokens.refresh_token is only present on the first grant
+    // oAuth2Client.credentials always holds the full set of current tokens
+    fs.writeFileSync(TOKEN_PATH, JSON.stringify(oAuth2Client.credentials))
+  })
+
   if (fs.existsSync(TOKEN_PATH)) {
     try {
       const token = JSON.parse(fs.readFileSync(TOKEN_PATH))
@@ -80,7 +88,10 @@ async function getAllCalendars(auth) {
     if (error.message.includes('invalid_grant')) {
       console.error('Token expired or invalid, requesting new token...')
       const newAuth = await authorize()
-      return getAllCalendars(newAuth)
+      // Retry fetching calendars once with refreshed credentials
+      const calendarNew = google.calendar({ version: 'v3', auth: newAuth })
+      const calendarListNew = await calendarNew.calendarList.list()
+      return calendarListNew.data.items
     }
     throw error
   }
@@ -89,20 +100,22 @@ async function getAllCalendars(auth) {
 // Fetch and parse VCALENDAR
 async function getOnCallEvents() {
   const response = await axios.get('https://rootly.com/account/shifts/ical/eyJfcmFpbHMiOnsiZGF0YSI6NTg2NywicHVyIjoibWVtYmVyc2hpcC9pY2FsIn19--cea7a5a4dd3a2b1da590b67ed1daf76fe3443846dcc3f746b5106c053f72d12d?user_ids=5785')
-  const events = await ical.parseICS(response.data)
+  const events = ical.parseICS(response.data)
   
   return Object.values(events)
     .filter(event => event.type === 'VEVENT')
-    .map(event => ({
-      summary: 'On-Call',
-      start: {
-        dateTime: event.start.toISOString()
-      },
-      end: {
-        dateTime: event.end.toISOString()
-      },
-      calendarName: 'On-Call Schedule'
-    }))
+    .map(event => {
+      return {
+        summary: event.description.includes('[On-call schedule]') ? 'On-Call': 'Buddy',
+        start: {
+          dateTime: event.start.toISOString()
+        },
+        end: {
+          dateTime: event.end.toISOString()
+        },
+        calendarName: 'On-Call Schedule'
+    }
+  })
 }
 
 // Fetch events from all calendars
@@ -142,7 +155,31 @@ async function listEvents(auth) {
     if (error.message.includes('invalid_grant')) {
       console.error('Token expired or invalid, requesting new token...')
       const newAuth = await authorize()
-      return listEvents(newAuth)
+      // Retry listing events once with refreshed credentials
+      const calendarNew = google.calendar({ version: 'v3', auth: newAuth })
+      const calendarsNew = await getAllCalendars(newAuth)
+      const allEventsNew = []
+      for (const cal of calendarsNew) {
+        const resNew = await calendarNew.events.list({
+          calendarId: cal.id,
+          timeMin: new Date().toISOString(),
+          maxResults: 50,
+          singleEvents: true,
+          orderBy: 'startTime'
+        })
+        const eventsNew = resNew.data.items || []
+        eventsNew.forEach(event => {
+          event.calendarName = cal.summary
+        })
+        allEventsNew.push(...eventsNew)
+      }
+      const onCallEventsNew = await getOnCallEvents()
+      allEventsNew.push(...onCallEventsNew)
+      return allEventsNew.sort((a, b) => {
+        const aTime = a.start.dateTime || a.start.date
+        const bTime = b.start.dateTime || b.start.date
+        return new Date(aTime) - new Date(bTime)
+      })
     }
     throw error
   }
