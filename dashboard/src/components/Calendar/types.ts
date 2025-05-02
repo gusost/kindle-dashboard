@@ -1,4 +1,5 @@
 export interface CalendarEvent {
+  calendarName: string
   kind: string
   etag: string
   id: string
@@ -44,7 +45,7 @@ export interface CalendarEvent {
 }
 
 export interface DayEvents {
-  date: string
-  weekday: string
+  date: Date
+  dateString: string
   events: CalendarEvent[]
 }

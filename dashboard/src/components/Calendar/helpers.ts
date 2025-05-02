@@ -5,36 +5,37 @@ import { CalendarEvent, DayEvents } from './types'
  * @param rawEvent - Raw calendar event data
  * @returns A properly typed CalendarEvent object
  */
-export const parseCalendarEvent = (rawEvent: any): CalendarEvent => ({
-  ...rawEvent,
-  created: new Date(rawEvent.created),
-  updated: new Date(rawEvent.updated),
-  start: {
-    dateTime: rawEvent.start.dateTime ? new Date(rawEvent.start.dateTime) : undefined,
-    date: rawEvent.start.date,
-    timeZone: rawEvent.start.timeZone || 'Europe/Stockholm'
-  },
-  end: {
-    dateTime: rawEvent.end.dateTime ? new Date(rawEvent.end.dateTime) : undefined,
-    date: rawEvent.end.date,
-    timeZone: rawEvent.end.timeZone || 'Europe/Stockholm'
-  },
-  originalStartTime:
-    rawEvent.originalStartTime && rawEvent.originalStartTime.dateTime
+export const parseCalendarEvent = (rawEvent: any): CalendarEvent => {
+  return {
+    ...rawEvent,
+    created: new Date(rawEvent.created),
+    updated: new Date(rawEvent.updated),
+    start: {
+      dateTime: rawEvent.start.dateTime ? new Date(rawEvent.start.dateTime) : undefined,
+      date: rawEvent.start.date,
+      timeZone: rawEvent.start.timeZone || 'Europe/Stockholm'
+    },
+    end: {
+      dateTime: rawEvent.end.dateTime ? new Date(rawEvent.end.dateTime) : undefined,
+      date: rawEvent.end.date,
+      timeZone: rawEvent.end.timeZone || 'Europe/Stockholm'
+    },
+    originalStartTime:
+      rawEvent.originalStartTime && rawEvent.originalStartTime.dateTime
+        ? {
+            dateTime: new Date(rawEvent.originalStartTime.dateTime),
+            timeZone: rawEvent.originalStartTime.timeZone || 'Europe/Stockholm'
+          }
+        : undefined,
+    reminders: rawEvent.reminders
       ? {
-          dateTime: new Date(rawEvent.originalStartTime.dateTime),
-          timeZone: rawEvent.originalStartTime.timeZone || 'Europe/Stockholm'
+          useDefault: rawEvent.reminders.useDefault,
+          overrides: rawEvent.reminders.overrides || []
         }
       : undefined,
-  reminders: rawEvent.reminders
-    ? {
-        useDefault: rawEvent.reminders.useDefault,
-        overrides: rawEvent.reminders.overrides || []
-      }
-    : undefined,
-  transparency: rawEvent.transparency || 'opaque'
-})
-
+    transparency: rawEvent.transparency || 'opaque'
+  }
+}
 /**
  * Formats a date into a time string in the format "HH:mm"
  * @param date - The date to format
@@ -54,7 +55,13 @@ export const formatTime = (date: Date): string => {
  * @returns A string representing the full day name
  */
 export const formatDay = (date: Date): string => {
-  return date.toLocaleDateString('sv-SE', { weekday: 'long' })
+  let weekday = date.toLocaleDateString('sv-SE', { weekday: 'short' })
+  const day = date.toLocaleDateString('sv-SE', { day: '2-digit' })
+  let month = date.toLocaleDateString('sv-SE', { month: 'short' })
+  // first uppercase
+  weekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
+  month = month.charAt(0).toUpperCase() + month.slice(1)
+  return `${weekday}, ${day} ${month}`
 }
 
 /**
@@ -110,11 +117,10 @@ export const getEventDate = (event: CalendarEvent): Date => {
  * @param date - The date to format
  * @returns An object containing the formatted date and weekday
  */
-export const formatDate = (date: Date): { date: string; weekday: string } => {
-  const weekday = date.toLocaleDateString('sv-SE', { weekday: 'long' })
+export const formatDate = (date: Date): { date: Date; dateString: string } => {
   return {
-    date: date.toLocaleDateString('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' }),
-    weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1)
+    date,
+    dateString: date.toLocaleDateString('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' })
   }
 }
 
@@ -129,7 +135,7 @@ export const processCalendarEvents = (rawEvents: any[]): DayEvents[] => {
 
   const groupedEventsMap: { [date: string]: DayEvents } = {}
 
-  events.forEach((event) => {
+  events.forEach(event => {
     if (!(event.start.dateTime || event.start.date) || !event.summary) return
 
     const startDate = getEventDate(event)
@@ -138,10 +144,10 @@ export const processCalendarEvents = (rawEvents: any[]): DayEvents[] => {
     // Create a date for each day in the event's duration
     let currentDate = new Date(startDate)
     while (currentDate < endDate) {
-      const { date, weekday } = formatDate(currentDate)
+      const { date, dateString } = formatDate(currentDate)
 
-      if (!groupedEventsMap[date]) {
-        groupedEventsMap[date] = { date, weekday, events: [] }
+      if (!groupedEventsMap[dateString]) {
+        groupedEventsMap[dateString] = { date, dateString, events: [] }
       }
 
       // For multi-day events, create a full-day event for each day
@@ -150,7 +156,7 @@ export const processCalendarEvents = (rawEvents: any[]): DayEvents[] => {
 
       if (isMultiDay) {
         // Create a full-day event for each day
-        groupedEventsMap[date].events.push({
+        groupedEventsMap[dateString].events.push({
           ...event,
           start: {
             date: dateStr,
@@ -163,7 +169,7 @@ export const processCalendarEvents = (rawEvents: any[]): DayEvents[] => {
         })
       } else {
         // For single-day events, keep as is
-        groupedEventsMap[date].events.push(event)
+        groupedEventsMap[dateString].events.push(event)
       }
 
       // Move to next day
@@ -171,5 +177,7 @@ export const processCalendarEvents = (rawEvents: any[]): DayEvents[] => {
     }
   })
 
-  return Object.values(groupedEventsMap).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  return Object.values(groupedEventsMap).sort(
+    (a, b) => new Date(a.dateString).getTime() - new Date(b.dateString).getTime()
+  )
 }

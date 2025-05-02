@@ -27,6 +27,12 @@
   justify-content: center;
   text-align: center;
 }
+.calendar-event--single-all-day {
+  flex: 0 1 150px;
+  margin-left: 11px;
+  align-self: center;
+
+}
 .calendar-event--all-day span {
   white-space: nowrap;
   overflow: hidden;
