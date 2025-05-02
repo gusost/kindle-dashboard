@@ -9,9 +9,9 @@ export const CalendarBlock: React.FC = () => {
 
   useEffect(() => {
     fetch('/data/calendar.json')
-      .then((response) => response.json())
-      .then((data) => setGroupedEvents(processCalendarEvents(data)))
-      .catch((error) => console.error('Error fetching calendar data:', error))
+      .then(response => response.json())
+      .then(data => setGroupedEvents(processCalendarEvents(data)))
+      .catch(error => console.error('Error fetching calendar data:', error))
   }, [])
 
   if (groupedEvents.length === 0) return <div>Loading...</div>
@@ -19,7 +19,7 @@ export const CalendarBlock: React.FC = () => {
   return (
     <div className="calendar-block">
       {groupedEvents.map((day, idx) => (
-        <CalendarDay key={idx} weekday={day.weekday} date={day.date} events={day.events} />
+        <CalendarDay key={idx} date={day.date} events={day.events} />
       ))}
     </div>
   )
